@@ -1,15 +1,17 @@
-limit:        100        # макс. число инструкций
-memory_size:  0x100      # размер памяти (достаточно до 0x100)
-
+name: assert little_to_big_endian(305419896) == 2018915346
+limit: 2000
+memory_size: 0x1000
 input_streams:
-  0x80: [305419896]  # 0x12345678
-  0x84: []           # порт вывода, без входных токенов
-
+  0x80: [305419896]
+  0x84: []
 reports:
-
-  - name: result
+  - name: Check results
     slice: last
+    filter:
+      - state
     view: |
+      numio[0x80]: {io:0x80:dec}
       numio[0x84]: {io:0x84:dec}
     assert: |
+      numio[0x80]: [] >>> []
       numio[0x84]: [] >>> [2018915346]

@@ -1,20 +1,57 @@
 
     .data
 
-input_addr:  .word 0x80
-output_addr: .word 0x84
+input_addr:         .word 0x80
+output_addr:        .word 0x84
+init_sp_value:      .word   0x1000
 
     .text
 
+.org 0x100
 _start:
+    ; инициализация sp
+    lui   sp, %hi(init_sp_value)
+    addi  sp, sp, %lo(init_sp_value)
+    lw    sp, 0(sp)
 
-    ; чтение указателя на входное значение
+
+
+
+    ; lw    sp, 0(sp)
+    ; addi  sp, sp, -8
+
+    ; чтение входного значения
+    addi  sp, sp, -4                        ; sp <- sp - 4
+    jal   ra, read_input                    ; вызов read_input
+    ; addi  sp, sp, 4
+
+    ; конвертирование порядка байтов
+    ; addi  sp, sp, -8                        ; сдвигаем sp на 4 байта
+    ; sw    t1, 0(sp)                         ; input -> sp + 4
+    jal   ra, convert 
+    ; addi  sp, sp, 8
+
+    ; запись результата
+    ; addi sp, sp, -4
+    jal  ra, write_output
+    ; addi sp, sp, 4
+
+    halt
+
+    
+read_input:
+    sw    ra, 0(sp)                         ; mem[sp] <- ra (адрес возврата)
     lui   t0, %hi(input_addr)               ; t0 <- 0x00000080 & 0xFFFFF000 = 0x00000000
     addi  t0, t0, %lo(input_addr)           ; t0 <- 0x00000000 + 0x00000080 = 0x00000080
-    lw    t0, 0(t0)                         ; t0 ← M[t0]  (фактический указатель на число)
+    lw    t0, 0(t0)                         ; t0 <- mem[t0]
+    lw    t1, 0(t0)                         ; чтение самого 32битного числа в t1
+    lw    ra, 0(sp)                         ; ra <- mem[sp]
+    jr    ra
 
-    ; чтение самого 32битного числа
-    lw    t1, 0(t0)                         ; t1 ← *(uint32_t*)t0
+
+
+convert:
+    sw    ra, 0(sp)                         ; адрес возврата -> sp
 
     ; подготовка констант
     addi  t2, zero, 24                      ; сдвиг на 24 бита
@@ -41,10 +78,18 @@ _start:
     or    a4, a4, a1                      
     or    a4, a4, a0                        ; итог: a4 = 0x11223344
 
+    lw    ra, 0(sp)
+    jr    ra
+
+
+write_output:
+    sw    ra, 0(sp)
+
     ; запись результата
     lui   t0, %hi(output_addr)              ; t0 ← адрес метки 0x84
     addi  t0, t0, %lo(output_addr)         
     lw    t0, 0(t0)                         ; t0 ← указатель куда сохранять
     sw    a4, 0(t0)                         ; *t0 = a4
-
-    halt
+    
+    lw    ra, 0(sp)
+    jr    ra
