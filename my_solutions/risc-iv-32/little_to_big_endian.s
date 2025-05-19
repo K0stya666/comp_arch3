@@ -14,28 +14,17 @@ _start:
     addi  sp, sp, %lo(init_sp_value)
     lw    sp, 0(sp)
 
-
-
-
-    ; lw    sp, 0(sp)
-    ; addi  sp, sp, -8
-
     ; чтение входного значения
     addi  sp, sp, -4                        ; sp <- sp - 4
     jal   ra, read_input                    ; вызов read_input
     ; addi  sp, sp, 4
 
     ; конвертирование порядка байтов
-    ; addi  sp, sp, -8                        ; сдвигаем sp на 4 байта
-    ; sw    t1, 0(sp)                         ; input -> sp + 4
     jal   ra, convert 
     ; addi  sp, sp, 8
 
     ; запись результата
-    ; addi sp, sp, -4
     jal  ra, write_output
-    ; addi sp, sp, 4
-
     halt
 
     
@@ -61,16 +50,16 @@ convert:
 
     ; извлечение отдельных байтов
     srl   a0, t1, t2                        ; сдвигаем на t2 бит t1 и записывем в a0
-    srl   a1, t1, t3                        ; 
-    and   a1, a1, t5                        ; 
-    srl   a2, t1, t4                        ; 
-    and   a2, a2, t5                        ; 
-    and   a3, t1, t5                        ; 
+    srl   a1, t1, t3
+    and   a1, a1, t5
+    srl   a2, t1, t4
+    and   a2, a2, t5
+    and   a3, t1, t5
 
     ; перемещение их наоборот
     sll   a3, a3, t2                        ; сдвигаем влево
-    sll   a2, a2, t3                        ; 
-    sll   a1, a1, t4                        ; 
+    sll   a2, a2, t3
+    sll   a1, a1, t4
 
     ; склейка результата
     mv    a4, a3                            ; a4 = старший байт
