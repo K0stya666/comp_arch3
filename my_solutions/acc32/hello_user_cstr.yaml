@@ -1,0 +1,29 @@
+name: hello_user_cstr
+limit: 1000
+memory_size: 0x1000
+
+# Подаём на вход имя "Alice\n", ожидаем пустой остаток
+input_streams:
+  0x80: [65, 108, 105, 99, 101, 10]  # "Alice\n"
+  0x84: []                           # сюда будем выводить
+
+reports:
+  - name: Step-by-step
+    slice: all
+    view: |
+      {pc}: {instruction} {pc:label}
+
+  - name: Result
+    slice: last
+    view: |
+      numio[0x80]: {io:0x80:dec}
+      numio[0x84]: {io:0x84:dec}
+      numio[0x84]: {io:0x84:sym}
+
+      {memory:0x100:0x120}
+
+assert: |
+  numio[0x84]: "" >>> "What is your name?\nHello, Alice!"
+  # В памяти greet_buf (0x100..0x11F) должна быть C-строка и далее '_' (0x5F)
+  mem[0x100..0x11F]: 48 65 6c 6c 6f 2c 20 41 6c 69 63 65 21 00 5f 5f 5f 5f 5f 5f 5f \
+                     5f 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f
