@@ -15,26 +15,26 @@ _start:
     lw    sp, 0(sp)
 
     ; чтение входного значения
-    addi  sp, sp, -4                        ; sp <- sp - 4
+    addi  sp, sp, -8                        ; sp <- sp - 8
     jal   ra, read_input                    ; вызов read_input
-    ; addi  sp, sp, 4
-
-    ; конвертирование порядка байтов
-    jal   ra, convert 
-    ; addi  sp, sp, 8
-
+    
     ; запись результата
     jal  ra, write_output
     halt
 
     
 read_input:
-    sw    ra, 0(sp)                         ; mem[sp] <- ra (адрес возврата)
+    sw    ra, 4(sp)                         ; mem[sp] <- ra (адрес возврата)
     lui   t0, %hi(input_addr)               ; t0 <- 0x00000080 & 0xFFFFF000 = 0x00000000
     addi  t0, t0, %lo(input_addr)           ; t0 <- 0x00000000 + 0x00000080 = 0x00000080
     lw    t0, 0(t0)                         ; t0 <- mem[t0]
     lw    t1, 0(t0)                         ; чтение самого 32битного числа в t1
-    lw    ra, 0(sp)                         ; ra <- mem[sp]
+    
+
+    ; конвертирование порядка байтов
+    jal   ra, convert 
+    
+    lw    ra, 4(sp)                         ; ra <- mem[sp]
     jr    ra
 
 
