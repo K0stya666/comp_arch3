@@ -10,66 +10,75 @@ stack_top:      .word  0x1000
                 
     .text
 
-
 _start:
-    movea.l  stack_top, A7      ; устанавливаем стек
+    movea.l  stack_top, A7          ; устанавливаем стек
     movea.l  (A7), A7
 
     movea.l  input_addr, A0
     movea.l  (A0), A0
 
+    move.l   (A0), D0               ; a
+    move.l   (A0),  D1              ; b
+
     movea.l  output_addr, A1
     movea.l  (A1), A1
 
-
-    move.l   (A0)+, D0           ; a
-    move.l   (A0),  D1           ; b
-
-    
     jsr      gcd
 
-    move.l   D0, (A1)            ; записываем НОД
+    move.l   D0, (A1)               ; записываем НОД
     halt
 
 
 gcd:
 
-    cmp.l    0, D0               ; флаги по a
-    bpl      abs_a_ok
-    not.l    D0
-    add.l    1, D0
-
-abs_a_ok:
-    cmp.l    0, D1               ; флаги по b
-    bpl      abs_b_ok
-    not.l    D1
-    add.l    1, D1
-
-abs_b_ok:
-    cmp.l    0, D0               ; если a==0 -> gcd=b
-    beq      return_b
-    cmp.l    0, D1               ; если b==0 -> gcd=a
-    beq      return_a
+    ; если b > a, то меняем их местами и теперь a это b, а b это a
+    cmp.l    D1, D0
+    bpl      gcd_loop
+    jsr      swap
 
 gcd_loop:
-    cmp.l    D1, D0
-    beq      gcd_done
 
-    bgt      a_gt_b
+    cmp.l   0, D1               ; пока b != 0
+    beq     end
 
-    sub.l    D0, D1              ; b = b − a
-    jmp      gcd_loop
+    move.l  D0, D3
+    div.l   D1, D3              ; D3 = a / b 
 
-a_gt_b:
-    sub.l    D1, D0              ; a = a − b
-    jmp      gcd_loop
+    mul.l   D1, D3              ; D3 = (a / b) * b
 
-return_b:
+    move.l  D0, D4              ; D4 = a
+    sub.l   D3, D4              ; D4 = a % b
+
+
+    move.l  D1, D0              ; a = b
+    move.l  D4, D1              ; b = a % b
+
+    jmp     gcd_loop
+
+end:
+    rts
+
+
+
+;======================= ФУНКЦИИ =======================
+
+; функция, которая меняет аргументы местами
+swap:
+    move.l   D0, D2
     move.l   D1, D0
+    move.l   D2, D1
     rts
 
-return_a:
-    rts
+; функция, которая вычитает из a b
+subber:
+    move.l   D0, D2             ; D2 = a
+    move.l   D1, D3             ; D3 = b
 
-gcd_done:
+subber_loop:
+
+    sub.l    D3, D2             ; D2 = diff = a - b
+    bpl      subber_loop        ; если diff >= 0, то продолжаем вычитать
+
+    add.l    D3, D2             ; делаем шаг назад
+    move.l   D2, D0
     rts
